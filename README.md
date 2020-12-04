@@ -14,23 +14,23 @@
 #### 使用说明
 
 支持op:
-Conv
-ConvTranspose
-BatchNormalization
-MaxPool
-AveragePool
-Relu
-PRelu
-Sigmoid
-Dropout
-Gemm (InnerProduct only)
-Matmul
-Add
-Mul
-Reshape
-Upsample 
-Concat
-Flatten
+Conv；
+ConvTranspose；
+BatchNormalization；
+MaxPool；
+AveragePool；
+Relu；
+PRelu；
+Sigmoid；
+Dropout；
+Gemm (InnerProduct only)；
+Matmul；
+Add；
+Mul；
+Reshape；
+Upsample ；
+Concat；
+Flatten；
 
 2020.12.03 : 比一般 onnx2caffe demo 多了两个 op : PRelu、 Matmul。
 
