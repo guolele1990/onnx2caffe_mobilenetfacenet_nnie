@@ -14,7 +14,7 @@
 #### 使用说明
 
 支持op:
-Conv；
+Conv；\n
 ConvTranspose；
 BatchNormalization；
 MaxPool；
