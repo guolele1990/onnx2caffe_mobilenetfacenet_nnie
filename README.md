@@ -34,7 +34,7 @@ Flatten；
 
 2020.12.03 : 比一般 onnx2caffe demo 多了两个 op : PRelu、 Matmul;
 
-2020.12.15 : 添加 op passthrough 即 yolo v5 的 focus 层。
+2020.12.15 : 添加 op passthrough 即 yolo v5 的 focus 层，添加了三个函数输入参数，参数代表意义看我上面的博客吧。
 #### 参与贡献
 
 无
