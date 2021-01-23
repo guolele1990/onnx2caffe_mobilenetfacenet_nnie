@@ -36,7 +36,7 @@ Flatten；
 
 2020.12.15 : 添加 op passthrough 即 yolo v5 的 focus 层，添加了三个函数输入参数，参数代表意义看我上面的博客吧。
 
-2021.1.23 : 添加 op : gap  relu6  
+2021.1.23 : 添加 op : gap、relu6、hswish、h-sigmoid
 #### 参与贡献
 
 无
