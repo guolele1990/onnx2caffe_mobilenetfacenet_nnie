@@ -275,8 +275,9 @@ def _convert_Div_Add(node, graph, err):
         scale_ = (1 / node.input_tensors[node.inputs[1]])
     elif node.op_type == "Add":
 
-        if len(input_1_shape) == 4:  # 如果是两个向量相加，比如 输入两组特征
-            layer = myf("Eltwise", node_name, [input_name], [output_name], operation=P.Eltwise.SUM)
+        #if len(input_1_shape) == 4:  # 如果是两个向量相加，比如 输入两组特征.  我也不记得当初为什么要这样写。。。。。修正了
+        if len(node.input_tensors) == 0:
+            layer = myf("Eltwise", node_name, node.inputs, [output_name], operation=P.Eltwise.SUM)
             graph.channel_dims[output_name] = graph.channel_dims[input_name]
             return layer
 
