@@ -2,7 +2,12 @@ from __future__ import print_function
 
 import sys
 import os
+#caffe_root='/opt/caffe_plus/python'
+caffe_root='/opt/caffe-1.0/python/'
+# os.chdir(caffe_root)
+sys.path.insert(0,caffe_root)
 import caffe
+
 from caffe.proto import caffe_pb2
 import onnx
 
@@ -15,6 +20,7 @@ import onnx2caffe._operators as cvt
 import onnx2caffe._weightloader as wlr
 from onnx2caffe._error_utils import ErrorHandling
 from onnx import shape_inference
+from modelComparator import compareOnnxAndCaffe
 
 transformers = [
     ConstantsToInitializers(),
@@ -27,7 +33,7 @@ def convertToCaffe(graph, prototxt_save_path, caffe_model_save_path, exis_focus=
     layers = []
     exist_nodes = []
     err = ErrorHandling()
-    gap_kernel_shape = [4, 4]  # 定制化操作参数，不会通用, gap 的池化卷积层
+    gap_kernel_shape = [1, 1]  # 定制化操作参数，不会通用, gap 的池化卷积层
     for i in graph.inputs:  # input 就是可视化中，第一个灰色东西，显示输入名 和 输入 shape，不是 op.
         edge_name = i[0]  # 一般是 images, data, input 这种名字
 
@@ -157,9 +163,9 @@ def getGraph(onnx_path):
 
 if __name__ == "__main__":
 
-    onnx_source_dir = r'F:\demo\Pytorch_demo\Mask\weight\onnx_weight'
-    save_dir = r"F:\demo\Pytorch_demo\Mask\weight\caffe_weight"
-    onnx_name = 'best_model_v2_relu6_sim.onnx'
+    onnx_source_dir = r'/opt/deeplearning/onnx2caffe_mobilenetfacenet_nnie/weights'
+    save_dir = r"/opt/deeplearning/onnx2caffe_mobilenetfacenet_nnie/weights"
+    onnx_name = 'S1.onnx'
     #onnx_source_dir = r'F:\demo\Pytorch_demo\yolov5-master\weights'
     #onnx_name = 'own_5s.onnx'
     onnx_path = os.path.join(onnx_source_dir, onnx_name)
@@ -172,4 +178,6 @@ if __name__ == "__main__":
 
     convertToCaffe(graph, prototxt_path, caffemodel_path)
     print('Caffe model was saved to path : ' + onnx_source_dir)
+    # compareOnnxAndCaffe(onnx_path, prototxt_path, caffemodel_path)
+
 
