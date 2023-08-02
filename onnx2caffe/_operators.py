@@ -164,6 +164,25 @@ def _convert_prelu(node, graph, err):
 
     return layer
 
+def _convert_leaky_relu(node,graph,err):
+    input_name = str(node.inputs[0])
+    output_name = str(node.outputs[0])
+    name = str(node.name)
+    alpha = node.attrs.get("alpha", 1)
+
+    print(node.attrs["alpha"])
+
+    if input_name==output_name:
+        inplace = True
+    else:
+        inplace = False
+
+    layer = myf("ReLU",name,[input_name],[output_name],in_place=inplace, negative_slope=alpha)
+    # l_top_relu1 = L.ReLU(l_bottom, name=name, in_place=True)
+
+    graph.channel_dims[output_name] = graph.channel_dims[input_name]
+
+    return layer
 def _convert_sigmoid(node, graph, err):
     input_name = str(node.inputs[0])
     output_name = str(node.outputs[0])
@@ -278,7 +297,8 @@ def _convert_Div_Add(node, graph, err):
         #if len(input_1_shape) == 4:  # 如果是两个向量相加，比如 输入两组特征.  我也不记得当初为什么要这样写。。。。。修正了
         if len(node.input_tensors) == 0:
             layer = myf("Eltwise", node_name, node.inputs, [output_name], operation=P.Eltwise.SUM)
-            graph.channel_dims[output_name] = graph.channel_dims[input_name]
+            # graph.channel_dims[output_name] = graph.channel_dims[input_name]
+            graph.channel_dims[output_name] = input_1_shape
             return layer
 
         shift_ = node.input_tensors[node.inputs[1]]
@@ -523,7 +543,7 @@ def _convert_upsample(node, graph, err):
                         weight_filler=dict(type="bilinear_upsampling")
                     ))
         """
-    elif str(mode, encoding="gbk") == "nearest":
+    elif str(mode, encoding="gbk") == "nearest" or str(mode, encoding="gbk") == "linear":
         print(node.inputs[-1])
         scales = node.input_tensors.get(node.inputs[-1])
         print(scales)
@@ -562,7 +582,12 @@ def _convert_concat(node, graph, err):
     if axis == 1:
         dim = 0
         for name in input_name_list:
-            dim += graph.channel_dims[name]
+            print(name+":"+" ",graph.channel_dims[name])
+            if isinstance(graph.channel_dims[name], tuple):
+                print(name+":"+" is a tuple")
+                dim += graph.channel_dims[name][axis]
+            else:
+                dim += graph.channel_dims[name]
         graph.channel_dims[output_name] = dim
     else:
         graph.channel_dims[output_name] = graph.channel_dims[input_name_list[0]]
@@ -617,12 +642,57 @@ def _convert_PassThrough(node_name, input_name, output_name, input_channel, bloc
     ))
 
     return layer
+def _convert_conv_slice(node, graph, err):
+    input_name = str(node.inputs[0])
+    output_name = str(node.outputs[0])
+    node_name = node.name
+    axes = node.attrs.get('axes', [])
+    #graph.channel_dims[input_name] = graph.shape_dict[input_name][1]
+    #channels = graph.shape_dict[input_name][1]
+    #channels = graph.channel_dims[input_name]
+    channels = graph.shape_dict[input_name][1]
+
+    if len(axes) != 1:
+        return err.unsupported_op_configuration(node, "Only single axis Slice is supported now")
+    starts = node.attrs['starts']
+    ends = node.attrs['ends']
+    axes = node.attrs.get('axes', [])
+    start = starts[0]
+    end = ends[0]
+    valid_pts = []
+    for pt in [start, end]:
+        if pt is not None and pt != 0 and pt != channels:
+            valid_pts.append(pt)
+    if start == 0:
+        output_name_list = [output_name, str(output_name) + "slice_another"]
+    else:
+        output_name_list = [str(output_name) + "slice_another", output_name]
+    if len(axes) == 0: axes = range(len(starts))
+    if len(axes) == 1:
+        if axes[0] == 0:
+            axis = 'batch'
+        elif axes[0] == 1:
+            axis = 'channel'
+        elif axes[0] == 2:
+            axis = 'height'
+        elif axes[0] == 3:
+            axis = 'width'
+        else:
+            return err.unsupported_op_configuration(node, "Slice is supported only along H, W or C dimensions")
+    else:
+        return err.unsupported_op_configuration(node,"Slice is supported only along one axis for 3D or 4D Tensors")
+    layer = myf('Slice', node_name, [input_name], output_name_list, slice_dim=axes[0], slice_point=valid_pts)
+    graph.channel_dims[output_name_list[0]] = valid_pts[0]
+    graph.channel_dims[output_name_list[-1]] = channels - valid_pts[-1]
+    return layer
+
 
 _ONNX_NODE_REGISTRY = {
     "Conv": _convert_conv,
     "Relu": _convert_relu,
     "Relu6": _convert_relu6,
     "PRelu": _convert_prelu,
+    "LeakyRelu": _convert_leaky_relu,
     "BatchNormalization": _convert_BatchNorm,
     "Add": _convert_Div_Add,
     "Mul": _convert_Mul,
@@ -643,5 +713,6 @@ _ONNX_NODE_REGISTRY = {
     "Transpose": _convert_Permute,
     "Softmax": _convert_Softmax,
     "Split": _convert_Split,
-    "PassThrough": _convert_PassThrough
+    "PassThrough": _convert_PassThrough,
+    "Slice": _convert_conv_slice,
 }

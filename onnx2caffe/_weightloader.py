@@ -60,6 +60,8 @@ def _convert_prelu(net, node, graph, err):
     np.copyto(net.params[node.name][0].data, weight, casting='same_kind')
     #np.copyto(net.params[node.name + "_scale_down"][0].data, downMul, casting='same_kind')
 
+def _convert_leaky_relu(net, node, graph, err):
+    pass
 
 def _convert_sigmoid(net, node, graph, err):
     pass
@@ -200,11 +202,11 @@ def _convert_conv_transpose(net, node, graph, err):
         np.copyto(net.params[node_name][1].data, bias, casting='same_kind')
 
 
-def _convert_PassThrough(node, graph, err):
+def _convert_PassThrough(net, node, graph, err):
     pass
 
 
-def _convert_Split(node, graph, err):
+def _convert_Split(net, node, graph, err):
     pass
 
 
@@ -213,6 +215,7 @@ _ONNX_NODE_REGISTRY = {
     "Relu": _convert_relu,
     "Relu6": _convert_relu6,
     "PRelu": _convert_prelu,
+    "LeakyRelu": _convert_leaky_relu,
     "BatchNormalization": _convert_BatchNorm,
     "Add": _convert_Add,
     "Mul": _convert_Mul,
